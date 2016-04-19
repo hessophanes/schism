@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE scenario SYSTEM "xml/dtd">
+<scenario version="1.00" cbi="phidias" image="raw">
+  <platform board="raspberrypi3" arch="arm64" />
+  <hypervisor ncpus="4" load_base="0x00000000">
+    <feature name="debugger" value="yes" />
+    <feature name="multiplexer" value="yes" />
+    <memreq id="trace" size="0x40000" flags_demand="rwg" flags_prevent="xdus" cpumap="*" />
+    <mmu type="hardware" format="arm64:g4io48">
+      <map xref="serial" flags="w" />
+      <map xref="irqc" flags="w" />
+      <map xref="mbox" flags="w" />
+    </mmu>
+  </hypervisor>
+  <guest id="linux1" ncpus="1">
+    <memreq id="linux1_main" size="0x10000000" flags_demand="rw" flags_prevent="xdus" />
+    <memreq id="linux1_arch" size="0x1000" flags_demand="rwg" flags_prevent="xdus" cpumap="*" />
+    <vdev id="linux1_uart" type="serial" frontend="pl011" master="master">
+      <emulate base="0x10009000" size="0x1000" />
+    </vdev>
+    <vdev id="linux1_irqs" type="irq_controller" frontend="arm_gic" master="master">
+      <emulate base="0xffefe000" size="0x1000" />
+      <emulate base="0xffeff000" size="0x1000" />
+    </vdev>
+    <mmu type="hardware" format="arm64:g4io48n">
+      <map xref="linux1_main" base="0x40000000" flags="rwx" />
+      <map xref="linux1_arch" base="0x3fffc000" flags="rw" />
+    </mmu>
+    <init arch_page="linux1_arch">
+      <copy xref="linux_kernel" dref="linux1_main" offset="0x8000" />
+    </init>
+    <entry bp_xref="linux1_main" bp_offset="0x8000" />
+    <sched class="wfq" />
+  </guest>
+  <files>
+    <file id="linux_kernel" href="/usr/src/build-rpi3/arch/arm64/boot/Image"/>
+  </files>
+</scenario>

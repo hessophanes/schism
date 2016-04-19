@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<board id="raspberrypi3">
+  <device id="serial" base="0x3f201000" size="0x1000" />
+  <device id="irqc" base="0x3f00b000" size="0x1000" />
+  <device id="mbox" base="0x40000000" size="0x1000" />
+  <memory id="dram" base="0x00000000" size="0x3a000000" />
+</board>

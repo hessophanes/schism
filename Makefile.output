@@ -1,0 +1,54 @@
+ifeq ($(O),)
+$(error No output directory. Do not use Makefile.output directly!)
+endif
+
+CBI := $(shell grep -o 'cbi=.[^"]*' $(O)/scenario.xml | cut -c6-)
+
+$(info Build Directory: $(O))
+$(info Identified CBI: $(CBI))
+
+include cbi/$(CBI)/Makefile.cbi
+
+$(O)/.makeconf_checked: $(O)/scenario.xml precompilation precompilation_$(CBI) $(XML_LIBRARY)
+	./precompilation $(O)
+	@if [ $(O)/Makeconf -nt $< ]; then \
+		$(MAKE) -C ../core O=$(O); \
+	fi
+	@touch $@
+
+$(O)/scenario_expanded.xml: $(O)/scenario.xml $(O)/.makeconf_checked expand $(XML_LIBRARY)
+	./expand $(O)
+
+$(O)/scenario_reparented.xml: $(O)/scenario_expanded.xml reparent $(XML_LIBRARY)
+	./reparent $(O)
+
+$(O)/scenario_config.c: $(O)/scenario_reparented.xml generate_config generate_config_$(CBI)
+	./generate_config $(O) 1
+
+$(O)/scenario_config.xo: $(O)/scenario_config.c $(O)/invoke_gcc.cmd config.lds
+	INVOKE_CMD=$$(< $(filter %.cmd,$^)); \
+	$$INVOKE_CMD -Werror -fno-zero-initialized-in-bss -Wl,-T$(filter %.lds,$^),--unresolved-symbols=ignore-all $< -o $@
+
+$(O)/scenario_measured.xml: $(O)/scenario_reparented.xml $(O)/scenario_config.xo $(O)/$(CBI).elf measure $(XML_LIBRARY)
+	./measure $(O)
+
+$(O)/scenario_p_laidout.xml: $(O)/scenario_measured.xml layout_memory $(XML_LIBRARY)
+	./layout_memory $(O)
+
+$(O)/scenario_v_laidout.xml: $(O)/scenario_p_laidout.xml layout_map $(XML_LIBRARY)
+	./layout_map $(O)
+
+$(O)/scenario_pagetables.xml: $(O)/scenario_v_laidout.xml pagetables $(XML_LIBRARY)
+	./pagetables $(O)
+
+$(O)/scenario_config_real.c: $(O)/scenario_pagetables.xml generate_config generate_config_$(CBI)
+	./generate_config $(O) 2
+
+$(O)/scenario_config_real.xo: $(O)/scenario_config_real.c $(O)/invoke_gcc.cmd config.lds
+	INVOKE_CMD=$$(< $(filter %.cmd,$^)); \
+	$$INVOKE_CMD -Werror -fno-zero-initialized-in-bss -Wl,-T$(O)/config_base.lds,-T$(filter %.lds,$^) $< -o $@
+
+$(O)/image: $(O)/scenario_config_real.xo $(O)/scenario_pagetables.xml $(O)/$(CBI).elf combine
+	./combine $(O)
+
+all: $(O)/image

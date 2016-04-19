@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE scenario SYSTEM "xml/dtd">
+<scenario>
+  <platform board="zynq7000" arch="arm" />
+  <hypervisor ncpus="2" load_base="0x100000">
+    <mmu type="hardware" format="arm:short">
+      <map xref="serial" flags="w" />
+      <map xref="mpcore" flags="w" />
+      <map xref="slcr" flags="w" />
+      <map xref="apboot" flags="w" />
+    </mmu>
+  </hypervisor>
+  <guest id="linux1" ncpus="1">
+    <memreq id="linux1_main" size="0x08000000" flags_demand="rw" flags_prevent="xdus"/>
+    <memreq id="linux1_arch" size="0x1000" flags_demand="rwg" flags_prevent="xdus"/>
+    <vdev type="irq_controller" frontend="arm_mpcore"/>
+    <vdev type="vtlb" frontend=""/>
+    <mmu type="vtlb" format="none">
+      <map xref="linux1_main" base="0x0" flags="rwx"/>
+    </mmu>
+    <init arch_page="linux1_arch">
+      <copy xref="linux" dref="linux1_main" offset="0x8000"/>
+    </init>
+    <entry bp_xref="linux1_main" bp_offset="0x8000"/>
+  </guest>
+  <files>
+    <file id="linux" href="../linux/zynq/arch/arm/boot/zImage"/>
+  </files>
+</scenario>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE scenario SYSTEM "xml/dtd">
+<scenario>
+  <platform board="cubieboard2" arch="arm" />
+  <hypervisor ncpus="2" load_base="0x40008000">
+    <memreq id="pvn12" size="0x20000" />
+    <memreq id="pvn21" size="0x20000" />
+    <mmu type="hardware" format="arm:long">
+      <map xref="serial" flags="w" />
+      <map xref="gic" flags="w" />
+      <map xref="gpio" flags="w" />
+      <map xref="cpuctl" flags="w" />
+    </mmu>
+  </hypervisor>
+  <guest id="linux1" ncpus="1">
+    <memreq id="linux1_main" size="0x30000000" flags_demand="rws" flags_prevent="xdu" />
+    <memreq id="linux1_arch" size="0x1000" flags_demand="rwg" flags_prevent="xdus" cpumap="*" />
+    <vdev type="serial" frontend="16550" irqs="0x21" />
+    <vdev type="irq_controller" frontend="arm_gic" />
+    <mmu type="hardware" format="arm:nested">
+      <map xref="linux1_main" base="0x40000000" flags="rwxg" />
+      <map xref="pvn12" base="0xf3300000" flags="rwg" />
+      <map xref="pvn21" base="0xf3320000" flags="rg" />
+      <map xref="gic" base="0x01c82000" subsize="0x1000" offset="0x6000" flags="rwgd" />
+      <map xref="usb" base="0x01c13000" flags="rwgd" />
+      <map xref="usb2" base="0x01c1c000" flags="rwgd" />
+      <map xref="gmac" base="0x01c50000" flags="rwgd" />
+      <map xref="i2c" base="0x01c2a000" flags="rwgd" />
+    </mmu>
+    <init arch_page="linux1_arch">
+      <copy xref="zimage" dref="linux1_main" offset="0x8000" />
+      <copy xref="ramdisk" dref="linux1_main" offset="0x1000000" />
+      <copy xref="devtree_full" dref="linux1_main" offset="0xff0000" />
+      <irq handler="pass" vector="0x1b" />
+      <irq handler="pass" vector="0x27" />
+      <irq handler="pass" vector="0x28" />
+      <irq handler="pass" vector="0x46" />
+      <irq handler="pass" vector="0x47" />
+      <irq handler="pass" vector="0x48" />
+      <irq handler="pass" vector="0x75" />
+      <cap type="ipc" target_xref="linux2" param="0x5b" />
+      <emulate handler="vdev" type="serial" base="0x01c28000" size="0x400" />
+      <emulate handler="vdev" type="irq_controller" base="0x01c81000" size="0x1000" />
+      <emulate handler="memory" type="mem32" base="0x01c00024" size="0x18">
+        <val_def hw_r_mask="0" hw_w_mask="0" mem_r_mask="0xffffffff" mem_w_mask="0" mem_val="0" />
+        <val offset="0x0" mem_val="0x16518000" />
+      </emulate>
+      <emulate handler="memory" type="mem32" base="0x01c20000" size="0x400" xref="gpio">
+        <val_def hw_r_mask="0xffffffff" hw_w_mask="0xffffffff" mem_r_mask="0" mem_w_mask="0" />
+        <val offset="0x0" hw_w_mask="0x0" />
+        <val offset="0x4" hw_w_mask="0x0" />
+        <val offset="0x6c" hw_w_mask="0x0" />
+      </emulate>
+      <emulate handler="memory" type="mem32" base="0x01c20800" size="0x800" xref="gpio" offset="0x800">
+        <val_def hw_r_mask="0xffffffff" hw_w_mask="0xffffffff" mem_r_mask="0" mem_w_mask="0" />
+      </emulate>
+      <emulate handler="memory" type="mem32" base="0x01c23800" size="0x200">
+        <val_def hw_r_mask="0" hw_w_mask="0" mem_r_mask="0" mem_w_mask="0" mem_val="0" />
+      </emulate>
+      <emulate handler="memory" type="mem32" base="0x01c25000" size="0x1000" xref="cpuctl">
+        <val_def hw_r_mask="0xffffffff" hw_w_mask="0" mem_r_mask="0" mem_w_mask="0" mem_val="0" />
+      </emulate>
+    </init>
+    <entry bp_xref="linux1_main" bp_offset="0x8000" />
+    <sched class="wfq" />
+  </guest>
+  <guest id="linux2" ncpus="1" cpumap="[1]">
+    <memreq id="linux2_main" size="0x0c800000" flags_demand="rws" flags_prevent="xdu" />
+    <memreq id="linux2_arch" size="0x1000" flags_demand="rwg" flags_prevent="xdus" cpumap="*" />
+    <vdev type="serial" frontend="16550" irqs="0x21" />
+    <vdev type="irq_controller" frontend="arm_gic" />
+    <mmu type="hardware" format="arm:nested">
+      <map xref="linux2_main" base="0x40000000" flags="rwxg" />
+      <map xref="pvn21" base="0xf3300000" flags="rwg" />
+      <map xref="pvn12" base="0xf3320000" flags="rg" />
+      <map xref="gic" base="0x01c82000" subsize="0x1000" offset="0x6000" flags="rwgd" />
+    </mmu>
+    <init arch_page="linux2_arch">
+      <copy xref="zimage" dref="linux2_main" offset="0x8000" />
+      <copy xref="ramdisk" dref="linux2_main" offset="0x1000000" />
+      <copy xref="devtree_stripped" dref="linux2_main" offset="0xff0000" />
+      <irq handler="pass" vector="0x1b" />
+      <cap type="ipc" target_xref="linux1" param="0x5b" />
+      <emulate handler="vdev" type="serial" base="0x01c28000" size="0x400" />
+      <emulate handler="vdev" type="irq_controller" base="0x01c81000" size="0x1000" />
+      <emulate handler="memory" type="mem32" base="0x01c00024" size="0x18">
+        <val_def hw_r_mask="0" hw_w_mask="0" mem_r_mask="0xffffffff" mem_w_mask="0" mem_val="0" />
+        <val offset="0x0" mem_val="0x16518000" />
+      </emulate>
+      <emulate handler="memory" type="mem32" base="0x01c20000" size="0x1000" xref="gpio">
+        <val_def hw_r_mask="0xffffffff" hw_w_mask="0" mem_r_mask="0" mem_w_mask="0" />
+      </emulate>
+      <emulate handler="memory" type="mem32" base="0x01c23800" size="0x200">
+        <val_def hw_r_mask="0" hw_w_mask="0" mem_r_mask="0" mem_w_mask="0" mem_val="0" />
+      </emulate>
+      <emulate handler="memory" type="mem32" base="0x01c25000" size="0x1000" xref="cpuctl">
+        <val_def hw_r_mask="0xffffffff" hw_w_mask="0" mem_r_mask="0" mem_w_mask="0" mem_val="0" />
+      </emulate>
+    </init>
+    <entry bp_xref="linux2_main" bp_offset="0x8000" />
+    <sched class="wfq" />
+  </guest>
+  <files>
+    <file id="zimage" href="/work/sunxi-linux/arch/arm/boot/zImage" />
+    <file id="ramdisk" href="../ramdisk/bb-arm.sq" />
+    <file id="devtree_full" href="../BUILDv4/cubie2/testdtb" />
+    <file id="devtree_stripped" href="../BUILDv4/cubie2/testdtb_stripped" />
+  </files>
+</scenario>

@@ -1,0 +1,13 @@
+_gen_*
+*.o
+*.a
+include/dtd
+/precompilation*
+/expand
+/reparent
+/generate_config*
+/measure
+/layout_memory
+/layout_map
+/pagetables
+/combine

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<board id="zynq7000">
+  <device id="serial" base="0xe0001000" size="0x1000" />
+  <device id="mpcore" base="0xf8f00000" size="0x2000" />
+  <device id="slcr" base="0xf8000000" size="0x1000" />
+  <device id="apboot" base="0xfffff000" size="0x1000" />
+  <memory id="dram" base="0x0" size="0x40000000" />
+</board>

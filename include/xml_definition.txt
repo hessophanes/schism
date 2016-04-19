@@ -1,0 +1,190 @@
+// subnodes of platform: board
+
+board
+* attribute	id		ID	REQUIRED
+* children	device			0:n
+* children	memory			0:n
+
+memory
+* attribute	id		ID	REQUIRED
+* attribute	base		HEX	REQUIRED
+* attribute	size		HEX	REQUIRED
+* children	memreq			0:n
+
+device
+* attribute	id		ID	REQUIRED
+* attribute	base		HEX	REQUIRED
+* attribute	size		HEX	REQUIRED
+
+// subnodes of platform: arch
+
+arch
+* attribute	id		ID	REQUIRED
+* children	paging_format		1:n
+
+paging_format
+* children	level			1:n
+* attribute	id		ID	REQUIRED
+* attribute	va_width	DEC	REQUIRED
+* attribute	pa_width	DEC	REQUIRED
+* attribute	size_estimate	HEX	REQUIRED
+
+level
+* children	flag			1:n
+* attribute	dir_base	HEX	OPTIONAL
+* attribute	leaf_base	HEX	OPTIONAL
+* attribute	shift		DEC	REQUIRED
+* attribute	width		DEC	REQUIRED
+* attribute	bpe		DEC	REQUIRED
+* attribute	align		DEC	REQUIRED
+
+flag
+* attribute	name		CHAR	REQUIRED
+* attribute	value_set	HEX	REQUIRED
+* attribute	value_clear	HEX	REQUIRED
+
+// platform
+
+platform
+* attribute	arch		IDREF(arch)	OPTIONAL
+* attribute	board		IDREF(board)	OPTIONAL
+* child		arch			OPTIONAL
+* child		board			OPTIONAL
+
+// memory management
+
+memreq
+* attribute	id		ID	REQUIRED
+* attribute	base		TABLE(HEX)	OPTIONAL
+* attribute	size		HEX	REQUIRED
+* attribute	align_shift	DEC	OPTIONAL
+* attribute	cpumap		LIST	OPTIONAL
+* attribute	flags_demand	STRING	REQUIRED
+* attribute	flags_prevent	STRING	REQUIRED
+* attribute	on		IDREF(memory)	OPTIONAL
+
+mmu
+* children	map			0:n
+* attribute	type		STRING	REQUIRED
+* attribute	format		STRING	REQUIRED
+* attribute	base		TABLE(HEX)	OPTIONAL
+* attribute	href		FILE	OPTIONAL
+* attribute	size_estimate	HEX	OPTIONAL
+
+map
+* attribute	xref		IDREF(memreq|device)	REQUIRED
+* attribute	index		TABLE(DEC)	OPTIONAL
+* attribute	base		TABLE(HEX)	OPTIONAL
+* attribute	offset		HEX	OPTIONAL
+* attribute	subsize		HEX	OPTIONAL
+* attribute	cpumap		LIST	OPTIONAL
+* attribute	flags		STRING	OPTIONAL
+* attribute	is_init		STRING	OPTIONAL
+
+// hypervisor
+
+hypervisor
+* children	feature			0:n
+* children	memreq			0:n
+* child		mmu			REQUIRED
+* attribute	ncpus		DEC	REQUIRED
+* attribute	load_base	HEX	OPTIONAL
+* attribute	entry		HEX	OPTIONAL
+
+feature
+* attribute	name		STRING	REQUIRED
+* attribute	value		STRING	REQUIRED
+
+// guest components
+
+sched
+* attribute	class		STRING	REQUIRED
+* attribute	share		STRING	OPTIONAL
+* attribute	period		STRING	OPTIONAL
+* attribute	budget		STRING	OPTIONAL
+* attribute	cpumap		LIST	OPTIONAL
+
+vdev
+* children	param			0:n
+* children	value			0:n
+* children	emulate			0:n
+* attribute	id		ID	REQUIRED
+* attribute	type		STRING	REQUIRED
+* attribute	frontend	STRING	REQUIRED
+* attribute	master		STRING	OPTIONAL
+
+param
+* attribute	type		STRING	REQUIRED
+* attribute	xref		IDREF(memreq|device)	OPTIONAL
+* attribute	value		STRING	OPTIONAL
+
+value
+* attribute	type		STRING	REQUIRED
+* attribute	offset		HEX	OPTIONAL
+* attribute	value		HEX	REQUIRED
+
+emulate
+* attribute	base		HEX	REQUIRED
+* attribute	size		HEX	REQUIRED
+* attribute	offset		HEX	OPTIONAL
+
+entry
+* attribute	bp_xref		IDREF(memreq)	REQUIRED
+* attribute	bp_offset	HEX	REQUIRED
+* attribute	ap_xref		IDREF(memreq)	OPTIONAL
+* attribute	ap_offset	HEX	OPTIONAL
+
+init
+* attribute	arch_page	IDREF(memreq)	REQUIRED
+* children	copy			0:n
+* children	irq			0:n
+* children	cap			0:n
+
+copy
+* attribute	xref		IDREF(memreq)	REQUIRED
+* attribute	dref		IDREF(memreq)	REQUIRED
+* attribute	offset		HEX	REQUIRED
+
+irq
+* attribute	vector		HEX	REQUIRED
+* attribute	handler		STRING	REQUIRED
+
+cap
+* attribute	type		STRING	REQUIRED
+* attribute	target_xref	IDREF(guest)	REQUIRED
+* attribute	param		HEX	OPTIONAL
+
+// guest
+
+guest
+* attribute	id		ID	REQUIRED
+* attribute	ncpus		DEC	REQUIRED
+* attribute	cpumap		LIST	OPTIONAL
+* children	memreq			0:n
+* children	vdev			0:n
+* children	sched			1:n
+* child		mmu			REQUIRED
+* child		init			REQUIRED
+* child		entry			REQUIRED
+
+// files
+
+files
+* children	file			1:n
+
+file
+* attribute	id		ID	REQUIRED
+* attribute	href		FILE	REQUIRED
+* attribute	offset		HEX	OPTIONAL
+* attribute	size		HEX	OPTIONAL
+
+// scenario
+
+scenario
+* child		platform		REQUIRED
+* child		hypervisor		REQUIRED
+* children	guest			0:n
+* child		files			OPTIONAL
+* attribute	version		STRING	REQUIRED
+* attribute	cbi		STRING	REQUIRED
+* attribute	image		STRING	REQUIRED

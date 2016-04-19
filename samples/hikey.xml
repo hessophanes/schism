@@ -1,0 +1,9 @@
+<scenario version="1.00" cbi="phidias" image="efi-pe">
+  <platform board="hikey" arch="arm64" />
+  <hypervisor ncpus="1" load_base="0x00008000">
+    <mmu type="hardware" format="arm64:g4io48" />
+  </hypervisor>
+  <files>
+    <file href="samples/arm64.xml" id="xml" />
+  </files>
+</scenario>

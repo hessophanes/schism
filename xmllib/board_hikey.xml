@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<board id="hikey">
+  <device id="serial" base="0xf7113000" size="0x1000" />
+  <device id="gic" base="0xf6800000" size="0x8000" />
+  <memory id="dram" base="0x00000000" size="0x80000000" />
+</board>

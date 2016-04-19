@@ -1,0 +1,50 @@
+<!--
+	(-1)	[]	generate build configuration from XML data
+
+        (0)     [-1]    compile hypervisor binary
+
+        (1)     []      expand and complete XML:
+        (1a)    []      * import <arch> and <board> into platform node
+        (1b)    []      * add implicit attributes: <guest cpumap>...
+        (1c)    []      * add missing <memreq> nodes from default <hypervisor>
+
+        (2)     []      reparent nodes and complete memory model:
+        (2a)    []      * determine default (i.e. largest) <memory> node
+	(2b)	[]	* add <map> nodes for <memreq> nodes with forced mapping
+        (2c)    []      * reparent all <memreq> nodes to <memory>
+        (2d)    []      * validate <map> permission flags
+
+        (3)     [1,2]   generate stub configuration data
+
+        (4)     []      import measurable components into XML (new <memreq> and <map> nodes):
+        (4a)    []      * measure core
+        (4b)    [3]     * measure stub configuration
+        (4c)    []      * apply / estimate size of pagetables
+        (4d)    []      * measure payload files
+
+        (5)     [4]     layout physical space (<memory> nodes)
+
+        (6)     [5]     layout virtual memory maps (<mmu> nodes)
+
+        (7)     [5,6]   generate pagetables (check estimate)
+        (7a)    []      * generate PTINIT (choose memreq/map by XML attribute)
+        (7b)    []      * generate PTCOREs
+
+        (8)     [7]     generate configuration data
+
+        (9)     [8]     concatenate final image
+-->
+
+<!--
+        MEMORY MAP:
+
+        [ CORE ++ CONFIG ++ PAGETABLES ++ BLOB ]
+-->
+
+<!--
+        TODO:
+	* properly call core's $(MAKE) when Makeconf changed (and when it didn't?)
+
+	* build a GUI tool to ease creation of new scenarios
+	  + offer sane default values (e.g. base of guest main memory == host dram base)
+-->

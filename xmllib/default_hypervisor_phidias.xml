@@ -1,0 +1,28 @@
+<hypervisor ncpus="0" load_base="0x0">
+  <memreq id="core_rx" size="0" flags_demand="rxg" flags_prevent="wdus" />
+  <memreq id="core_r" size="0" flags_demand="rg" flags_prevent="wxdus" />
+  <memreq id="core_rws" size="0" flags_demand="rwgs" flags_prevent="xdu" />
+  <memreq id="core_rwt" size="0" flags_demand="rg" flags_prevent="wxdus" />
+  <memreq id="core_rw" size="0" flags_demand="rwg" flags_prevent="xdus" cpumap="*" />
+  <memreq id="config_r" size="0" flags_demand="rg" flags_prevent="wxdus" />
+  <memreq id="config_rw" size="0" flags_demand="rwg" flags_prevent="xdus" cpumap="*" />
+  <memreq id="config_rws" size="0" flags_demand="rwgs" flags_prevent="xdu" />
+  <memreq id="config_rwt" size="0" flags_demand="rg" flags_prevent="wxdus" />
+  <memreq id="pagetables" size="0" flags_demand="" flags_prevent="rwxgdus" />
+  <memreq id="blob" size="0" flags_demand="rg" flags_prevent="wxdus" />
+
+  <memreq id="stack" size="0x1000" flags_demand="rwg" flags_prevent="xdus" cpumap="*" />
+  <mmu type="hardware" format="none">
+    <map xref="core_rx" is_init="is_init" />
+    <map xref="core_r" />
+    <map xref="core_rws" />
+    <map xref="core_rwt" />
+    <map xref="core_rw" />
+    <map xref="config_r" is_init="is_init" />
+    <map xref="config_rw" />
+    <map xref="config_rws" />
+    <map xref="config_rwt" />
+    <map xref="blob" />
+    <map xref="stack" />
+  </mmu>
+</hypervisor>

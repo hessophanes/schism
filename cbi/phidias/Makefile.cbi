@@ -1,0 +1,24 @@
+# =============================================================================
+# Phidias-specific definitions
+
+TARGETS += precompilation_phidias
+PC_SRC_PHIDIAS := $(wildcard cbi/phidias/precompilation/*.c)
+
+TARGETS += generate_config_phidias
+GC_SRC_PHIDIAS := $(wildcard cbi/phidias/generate_config/*.c)
+GC_HDR_PHIDIAS := $(wildcard cbi/phidias/generate_config/*.h)
+
+# =============================================================================
+# Phidias-specific targets
+
+generate_config_phidias: $(patsubst %.c,%.o,$(GC_SRC_PHIDIAS)) $(LIB) $(HDR) $(GC_HDR_PHIDIAS)
+	gcc $(filter %.o,$^) $(CFLAGS) -lxml41 -o $@
+
+$(patsubst %.c,%.o,$(GC_SRC_PHIDIAS)): %.o: %.c $(HDR) $(GC_HDR_PHIDIAS)
+	gcc $< $(CFLAGS) -c -o $@
+
+precompilation_phidias: $(patsubst %.c,%.o,$(PC_SRC_PHIDIAS)) $(LIB) $(HDR)
+	gcc $(filter %.o,$^) $(CFLAGS) -lxml41 -o $@
+
+$(patsubst %.c,%.o,$(PC_SRC_PHIDIAS)): %.o: %.c $(HDR)
+	gcc $< $(CFLAGS) -c -o $@

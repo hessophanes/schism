@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<board id="cubieboard2">
+  <device id="serial" base="0x01c28000" size="0x1000" />
+  <device id="gic" base="0x01c80000" size="0x8000" />
+  <device id="cpuctl" base="0x01c25000" size="0x1000" />
+  <device id="gpio" base="0x01c20000" size="0x1000" />
+  <device id="usb" base="0x01c13000" size="0x2000" />
+  <device id="usb2" base="0x01c1c000" size="0x1000" />
+  <device id="i2c" base="0x01c2a000" size="0x2000" />
+  <device id="gmac" base="0x01c50000" size="0x10000" />
+  <memory id="dram" base="0x40000000" size="0x40000000" />
+</board>
