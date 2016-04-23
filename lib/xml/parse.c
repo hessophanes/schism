@@ -7,6 +7,24 @@
 
 char xml_errormsg[256];
 
+static int skip_comment(char **str) {
+  char *comment_start = *str;
+  char *comment_end;
+
+  if (strncmp(comment_start, "<!--", 4) == 0) {
+    comment_start += 4;
+    comment_end = strstr(comment_start, "-->");
+    if (comment_end == NULL) {
+      sprintf(xml_errormsg, "EP005: unterminated XML comment");
+      return 0;
+    }
+    *str = comment_end + 3 - 1;		// counter 'p++' in calling loop
+    return 1;
+  }
+
+  return 0;
+}
+  
 struct xmlnode *parse_node(char **data, uint32_t size) {
   struct xmlnode *node, *child_node;
   uint32_t i;
@@ -14,8 +32,13 @@ struct xmlnode *parse_node(char **data, uint32_t size) {
   char *p = *data;
   char *close_tag;
 
-  while ((*p == ' ') || (*p == '\t') || (*p == '\n') || (*p == '\r'))
+  xml_errormsg[0] = '\0';
+
+  while ((*p == ' ') || (*p == '\t') || (*p == '\n') || (*p == '\r') || skip_comment(&p))
     p++;
+
+  if (xml_errormsg[0])
+    goto error;
 
   if (*p != '<') {
     sprintf(xml_errormsg, "EP001: expected an opening tag");
@@ -97,8 +120,11 @@ struct xmlnode *parse_node(char **data, uint32_t size) {
   /* children parse loop */
   while (1) {
 
-    while ((*p == ' ') || (*p == '\t') || (*p == '\n') || (*p == '\r'))
+    while ((*p == ' ') || (*p == '\t') || (*p == '\n') || (*p == '\r') || skip_comment(&p))
       p++;
+
+    if (xml_errormsg[0])
+      goto error;
 
     if (strncmp(p, close_tag, strlen(close_tag)) == 0) {
       p += strlen(close_tag);
